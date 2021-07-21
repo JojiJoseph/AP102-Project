@@ -5,6 +5,7 @@ import toml
 import matplotlib.pyplot as plt
 import numpy as np
 import imageio
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from astar import Astar
 
@@ -31,6 +32,12 @@ combo_map.set(combo_map["values"][0])
 combo_map.state(['readonly'])
 combo_map.pack()
 
+fig = plt.figure()
+ax = plt.gca()
+canvas = FigureCanvasTkAgg(fig, master=root)
+
+canvas.get_tk_widget().pack()
+
 
 def simulate():
     map_name = maps[combo_map.get()]
@@ -40,11 +47,14 @@ def simulate():
     astar_ = Astar(map_img)
 
     x, y = astar_.shortest_path((0, 0), (19, 19))
-    plt.figure()
-    plt.imshow(map_img, cmap="Accent")
-    plt.scatter(x, y)
-    plt.title(map_name)
-    plt.show()
+
+    # plt.sca(ax)
+
+    ax.imshow(map_img, cmap="Accent")
+    ax.scatter(x, y)
+    # plt.title(map_name)
+    canvas.draw()
+    ax.clear()
 
 
 button_sim = ttk.Button(root, text="Simulate", command=simulate)
