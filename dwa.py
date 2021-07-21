@@ -66,7 +66,9 @@ def track(ref_path, pose, v, w, dt=0.1, grid_data=grid_data,
         # can use a simplistic definition of
         # how close is the last pose in local path from the ref path
 
-        cte = np.linalg.norm(ref_path[-1, 0:2]-local_path[-1, 0:2])
+        cte = np.linalg.norm(
+            ref_path[-1, 0:2]-local_path[-1, 0:2]) / len(local_path)
+        # print(cte)
 
         # other cost functions are possible
         # can modify collision checker to give distance to closest obstacle
@@ -85,22 +87,25 @@ def track(ref_path, pose, v, w, dt=0.1, grid_data=grid_data,
 def dwa(grid_data, ref_path, start_pose, goal_threshold=0.3, grid_res=1):
     pose = start_pose
     logs = []
+    jump_distance = 4
     path_index = 0
     v, w = 0.0, 0.0
     failed_attempts = -1
     while path_index < len(ref_path)-1:
         print(path_index/len(ref_path))
-        # t0 = time.time()
         local_ref_path = ref_path[path_index:path_index+pred_horizon]
         if goal_threshold > np.min(np.hypot(local_ref_path[:, 0]-pose[0],
-                                            local_ref_path[:, 1]-pose[1])) \
-                or failed_attempts > 16:
-            failed_attempts = -1
-            path_index = path_index + 1 + \
-                np.argmin(
+                                            local_ref_path[:, 1]-pose[1])):
+            candidate_jump = np.argmin(
                     np.hypot(local_ref_path[:, 0]-pose[0],
                              local_ref_path[:, 1]-pose[1]))
+            path_index = path_index + 1 + \
+                candidate_jump*(candidate_jump < jump_distance)
+
         failed_attempts += 1
+        if failed_attempts > 160:
+            path_index += 1
+            failed_attempts = -1
         # get next command
         v, w = track(local_ref_path, pose, v, w, dt,
                      detect_collision=True, grid_data=grid_data)

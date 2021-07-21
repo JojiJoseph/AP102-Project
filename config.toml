@@ -15,6 +15,6 @@ W_DOT_MAX = 3.0 # Maximum angular acceleration (rad/s^2)
 LATERAL_ACC_MAX = 1.5 # Maximum lateral acceleration (m/s^2)
 goal_threshold = 0.3
 pred_horizon=10
-w_cte = 1.0
+w_cte = 10
 w_obs = 1.0
 w_speed = 1.0

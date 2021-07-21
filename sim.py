@@ -9,7 +9,7 @@ import imageio
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from astar import Astar, generate_trajectory
-from utils import *
+
 from astar import corners_to_route, get_corners
 
 from astar import generate_trajectory as traj
