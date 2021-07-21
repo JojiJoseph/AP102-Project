@@ -65,7 +65,7 @@ def simulate():
     ax.imshow(map_img, cmap="Accent")
     ax.scatter(x, y)
     plt.plot(x_, y_)
-    plt.plot(dwa_path[:,0],dwa_path[:,1])
+    plt.plot(dwa_path[:, 0], dwa_path[:, 1])
     # plt.title(map_name)
     canvas.draw()
     ax.clear()
