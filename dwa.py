@@ -2,6 +2,7 @@
 import numpy as np
 import toml
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Cursor
 import time
 
 from unicycle import simulate_unicycle
@@ -94,8 +95,13 @@ def dwa(grid_data, ref_path, start_pose, goal_threshold=0.3, grid_res=1,
     path_index = 0
     v, w = 0.0, 0.0
     failed_attempts = -1
+    if animate:
+        fig, ax = plt.subplots()
+        plt.ion()
 
-    while path_index < 10:#0.001*len(ref_path)-1:
+    cursor = Cursor(plt.gca(),)
+
+    while path_index < 3:  # 0.001*len(ref_path)-1:
         print(path_index/len(ref_path))
         local_ref_path = ref_path[path_index:path_index+pred_horizon]
         if goal_threshold > np.min(np.hypot(local_ref_path[:, 0]-pose[0],
@@ -121,13 +127,79 @@ def dwa(grid_data, ref_path, start_pose, goal_threshold=0.3, grid_res=1,
         # update logs
         logs.append([*pose, v, w])
         if animate:
+            plt.sca(plt.gca())
+
             plt.clf()
+            # plt.figure()
+            cursor = Cursor(plt.gca(), horizOn=True)
             plt.imshow(grid_data.T, cmap="Dark2")
             plt.scatter(pose[0], pose[1], c="red", label="Robot")
-            plt.plot(ref_path[:,0],ref_path[:,1], label="Astar Path")
+            plt.plot(ref_path[:, 0], ref_path[:, 1], label="Astar Path")
+            plt.draw()
             plt.pause(0.00001)
             # fig.canvas.flush_events()
             # time.sleep(0.1)
     if animate:
         plt.show()
+        cursor = Cursor(plt.gca(), color="green")
+
     return np.array(logs)
+
+
+class DWA:
+    def __init__(self, grid_data, ref_path, start_pose, goal_threshold=0.3, grid_res=1) -> None:
+        self.grid_data = grid_data
+        self.ref_path = ref_path
+        self.start_pose = start_pose
+        self.goal_threshold = goal_threshold
+        self.grid_res = 1
+        self.path_index = 0
+        self.pose = start_pose
+        self.v, self.w = 0.0, 0.0
+        self.failed_attempts = -1
+        self.logs = []
+        self.path_index = 0
+
+    def __iter__(self):
+        self.path_index = 0
+        self.logs = []
+        return self
+
+    def reset(self):
+        self.path_index = 0
+        self.logs = []
+        return self
+
+    def __next__(self):
+        jump_distance = 4
+        pred_horizon = 10
+        # print(self.path_index)
+        if self.path_index > len(self.ref_path)-1:
+            raise StopIteration
+        # failed_attempts = -1
+        # while path_index < 3:  # 0.001*len(ref_path)-1:
+        # print(self.path_index/len(self.ref_path))
+        local_ref_path = self.ref_path[self.path_index:self.path_index+pred_horizon]
+        if self.goal_threshold > np.min(np.hypot(local_ref_path[:, 0]-self.pose[0],
+                                                 local_ref_path[:, 1]-self.pose[1])):
+            candidate_jump = np.argmin(
+                np.hypot(local_ref_path[:, 0]-self.pose[0],
+                         local_ref_path[:, 1]-self.pose[1]))
+            self.path_index = self.path_index + 1 + \
+                candidate_jump*(candidate_jump < jump_distance)
+
+        self.failed_attempts += 1
+        if self.failed_attempts > 160:
+            self.path_index += 1
+            self.failed_attempts = -1
+        # get next command
+        self.v, self.w = track(local_ref_path, self.pose, self.v, self.w, dt,
+                               detect_collision=True, grid_data=self.grid_data)
+
+        # simulate vehicle for 1 step
+        # remember the function now returns a trajectory, not a single pose
+        self.pose = simulate_unicycle(self.pose, self.v, self.w, N=1, dt=dt)[0]
+
+        # update logs
+        self.logs.append([*self.pose, self.v, self.w])
+        return np.array(self.logs)
