@@ -20,7 +20,6 @@ maps = config["maps"]
 
 root = tk.Tk()
 
-assets = {}
 
 icon_file_name = "icon.png"
 icon = PhotoImage(file=icon_file_name)
@@ -61,7 +60,7 @@ def simulate():
     ref_path = ref_path = np.hstack(
         [np.array(axis).reshape(-1, 1) for axis in (x_, y_, t)])
 
-    dwa_path = dwa(map_img.T, ref_path, init_pose, grid_res=1)
+    dwa_path = dwa(map_img.T, ref_path, init_pose, grid_res=1, animate=True)
     ax.imshow(map_img, cmap="Accent")
     ax.scatter(x, y)
     plt.plot(x_, y_)

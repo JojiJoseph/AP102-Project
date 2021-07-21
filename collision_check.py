@@ -24,11 +24,7 @@ for obs in obstacles:
 x1, y1 = 0, 0
 x2, y2 = grid_span, grid_span
 
-# imshow() from prior cell
-plt.figure()
-plt.imshow(1-grid_data.T, origin='lower',
-           cmap=plt.cm.gray, extent=[x1, x2, y1, y2])
-plt.show()
+
 
 w = 0.8
 l = 1.2
