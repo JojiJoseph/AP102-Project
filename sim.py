@@ -38,12 +38,28 @@ combo_map.pack()
 
 fig = plt.figure()
 ax = plt.gca()
+dwa_obj = None
 canvas = FigureCanvasTkAgg(fig, master=root)
+
+
+def update_obstacle(event):
+    global dwa_obj
+    # if dwa_obj is not None:
+    print(event.x, event.y)
+    x = event.x // 50
+    y = event.y // 50
+    if dwa_obj is not None:
+        dwa_obj.grid_data[x:x+2, y:y+2] = 1
+
+
+canvas.get_tk_widget().bind("<Button-1>", update_obstacle)
+
 
 canvas.get_tk_widget().pack()
 
 SIMULATION_IS_STOPPED = 0
 SIMULATION_IN_PROGRESS = 1
+SIMULATION_IS_PAUSED = 1
 
 simulation_status = SIMULATION_IS_STOPPED
 
@@ -70,7 +86,7 @@ def simulate():
         [np.array(axis).reshape(-1, 1) for axis in (x_, y_, t)])
 
     simulation_status = SIMULATION_IN_PROGRESS
-
+    global dwa_obj
     dwa_obj = DWA(map_img.T, ref_path, init_pose, grid_res=1)
 
     root.after(100, update_plot, dwa_obj, ax)
@@ -81,6 +97,11 @@ def stop_simulation():
     if simulation_status == SIMULATION_IN_PROGRESS:
         simulation_status = SIMULATION_IS_STOPPED
         print("Simulation is being stopped!")
+
+
+def pause_simulation():
+    global simulation_status
+    simulation_status = SIMULATION_IS_PAUSED
 
 
 def update_plot(dwa_obj, ax):
@@ -100,8 +121,13 @@ def update_plot(dwa_obj, ax):
         pass
 
 
-button_sim = ttk.Button(root, text="Simulate", command=simulate)
-button_stop_sim = ttk.Button(root, text="Stop", command=stop_simulation)
-button_sim.pack()
+button_frame = ttk.Frame(root)
+button_frame.pack()
+button_sim = ttk.Button(button_frame, text="Simulate", command=simulate)
+# button_pause = ttk.Button(button_frame, text="Pause", command=pause_simulation) TODO implement
+button_stop_sim = ttk.Button(
+    button_frame, text="Stop", command=stop_simulation)
+button_sim.pack(side=tk.LEFT)
+# button_pause.pack()
 button_stop_sim.pack()
 root.mainloop()

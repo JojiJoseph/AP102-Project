@@ -145,8 +145,15 @@ def dwa(grid_data, ref_path, start_pose, goal_threshold=0.3, grid_res=1,
 
     return np.array(logs)
 
-
 class DWA:
+    """[summary]
+
+    Raises:
+        StopIteration: [description]
+
+    Returns:
+        [type]: [description]
+    """
     def __init__(self, grid_data, ref_path, start_pose, goal_threshold=0.3, grid_res=1) -> None:
         self.grid_data = grid_data
         self.ref_path = ref_path
