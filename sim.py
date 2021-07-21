@@ -6,6 +6,11 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 import imageio
+from PIL import Image, ImageTk
+
+import cv2
+from urwid.text_layout import line_width
+
 
 from astar import Astar, generate_trajectory, corners_to_route, get_corners
 from dwa import DWA
@@ -25,17 +30,25 @@ root.iconphoto(False, icon)
 root.geometry("1280x960")
 root.title(" AP102 Project")
 
-combo_map = ttk.Combobox(master=root)
+combo_frame = ttk.Frame(root)
+combo_label = ttk.Label(master=combo_frame, text="Select a map")
+combo_label.pack(side=tk.LEFT)
+
+combo_map = ttk.Combobox(master=combo_frame)
 
 combo_map["values"] = list(maps.keys())
 combo_map.set(combo_map["values"][0])
 combo_map.state(['readonly'])
 combo_map.pack()
 
+combo_frame.pack(pady=10)
+
 fig = plt.figure()
 ax = plt.gca()
 dwa_obj = None
-canvas = FigureCanvasTkAgg(fig, master=root)
+# canvas = FigureCanvasTkAgg(fig, master=root)
+
+canvas = tk.Canvas(master=root, height=400, width=400, bg="white")
 
 
 def update_obstacle(event):
@@ -46,16 +59,18 @@ def update_obstacle(event):
         dwa_obj.grid_data[x:x+2, y:y+2] = 1
 
 
-canvas.get_tk_widget().bind("<Button-1>", update_obstacle)
+canvas.bind("<Button-1>", update_obstacle)
 
 
-canvas.get_tk_widget().pack()
+canvas.pack()
 
 SIMULATION_IS_STOPPED = 0
 SIMULATION_IN_PROGRESS = 1
-SIMULATION_IS_PAUSED = 1
+SIMULATION_IS_PAUSED = 2  # TODO
 
 simulation_status = SIMULATION_IS_STOPPED
+
+scale_x, scale_y = 20, 20
 
 
 def simulate():
@@ -80,9 +95,42 @@ def simulate():
 
     simulation_status = SIMULATION_IN_PROGRESS
     global dwa_obj
+    global img  # To not lose img
     dwa_obj = DWA(map_img.T, ref_path, init_pose, grid_res=1)
-
+    img = cv2.resize(1-dwa_obj.grid_data.T, (400, 400),
+                     interpolation=cv2.INTER_NEAREST)*255.
+    img = ImageTk.PhotoImage(image=Image.fromarray(img))
+    canvas.create_image(20, 20, image=img, anchor="nw")
+    # canvas.draw()
+    # canvas.
+    # canvas.update()
     root.after(100, update_plot, dwa_obj, ax)
+
+
+def scatter(x, y, tag="scatter", color="red"):
+    # x = x + 20
+    # y = y + 20
+    print(x.shape)
+    global canvas
+    n = len(x)
+    assert len(x) == len(y)
+    for i in range(n):
+        canvas.create_oval(20-10+x[i]*scale_x, 20-10+y[i]*scale_y,
+                          20+10+x[i]*scale_x, 20+10+y[i]*scale_y, fill=color, tag=tag)
+    canvas.update()
+
+
+def plot(x, y, tag="lines"):
+    # x = x + 20
+    # y = y + 20
+    print(x.shape)
+    global canvas
+    n = len(x)
+    assert len(x) == len(y)
+    for i in range(1, n):
+        canvas.create_line(20+x[i-1]*scale_x, 20+y[i-1]*scale_y,
+                           20+x[i]*scale_x, 20+y[i]*scale_y, fill="black", width=2, tag=tag)
+    canvas.update()
 
 
 def stop_simulation():
@@ -98,16 +146,20 @@ def pause_simulation():
 
 
 def update_plot(dwa_obj, ax):
+    # canvas.update()
     if simulation_status != SIMULATION_IN_PROGRESS:
         dwa_obj.reset()
         return
     try:
         progress = next(dwa_obj)
         ax.imshow(dwa_obj.grid_data.T, cmap="Accent")
-        ax.plot(progress[:, 0], progress[:, 1])
-        ax.scatter(progress[-1, 0], progress[-1, 1], label="robot")
+        # ax.plot(progress[:, 0], progress[:, 1])
+        canvas.delete("lines")
+        canvas.delete("robot")
+        plot(progress[:, 0], progress[:, 1])
+        scatter(progress[None, -1, 0], progress[None, -1, 1], tag="robot")
         plt.legend()
-        canvas.draw()
+
         ax.clear()
         root.after(1, update_plot, dwa_obj, ax)
     except StopIteration:
