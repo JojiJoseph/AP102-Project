@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import imageio
 
+from astar import Astar
+
 config = toml.load("config.toml")
 maps = config["maps"]
 
@@ -36,8 +38,12 @@ def simulate():
     map_img = imageio.imread(map_name)
     map_img = np.array(map_img)[:, :, 0]
 
+    astar_ = Astar(map_img)
+
+    x, y = astar_.shortest_path((0, 0), (19, 19))
     plt.figure()
     plt.imshow(map_img, cmap="Accent")
+    plt.scatter(x, y)
     plt.title(map_name)
     plt.show()
 
