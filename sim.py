@@ -11,7 +11,6 @@ from astar import Astar
 config = toml.load("config.toml")
 maps = config["maps"]
 
-print(config)
 
 root = tk.Tk()
 
