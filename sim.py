@@ -1,18 +1,14 @@
-from dwa import DWA
 import tkinter as tk
 from tkinter import PhotoImage
 from tkinter import ttk
 import toml
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 import imageio
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from astar import Astar, generate_trajectory
-
-from astar import corners_to_route, get_corners
-
-from astar import generate_trajectory as traj
+from astar import Astar, generate_trajectory, corners_to_route, get_corners
+from dwa import DWA
 
 config = toml.load("config.toml")
 maps = config["maps"]
@@ -44,8 +40,6 @@ canvas = FigureCanvasTkAgg(fig, master=root)
 
 def update_obstacle(event):
     global dwa_obj
-    # if dwa_obj is not None:
-    print(event.x, event.y)
     x = event.x // 50
     y = event.y // 50
     if dwa_obj is not None:
@@ -77,7 +71,6 @@ def simulate():
 
     x, y = astar_.shortest_path((0, 0), (19, 19))
 
-    # plt.sca(ax)
     corners = get_corners(x, y)
     route, init_pose = corners_to_route(corners)
     x_, y_, t = generate_trajectory(route, init_pose, v_turn=0.01, dt=0.1)

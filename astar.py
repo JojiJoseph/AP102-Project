@@ -11,7 +11,6 @@ DEBUG = False
 
 def cubic_spiral(theta_i, theta_f, n=10):
     x = np.linspace(0, 1, num=n)
-    # -2*x**3 + 3*x**2
     return (theta_f-theta_i)*(-2*x**3 + 3*x**2) + theta_i
 
 
@@ -60,14 +59,17 @@ def change_lane(side, curr_pose, n=10, v=v, dt=dt):
     return x, y, theta
 
 
-def generate_trajectory(route, init_pose=(0, 0, np.pi/2), v_straight=v, v_turn=v, dt=dt):
+def generate_trajectory(route, init_pose=(0, 0, np.pi/2),
+                        v_straight=v, v_turn=v, dt=dt):
     curr_pose = init_pose
     func = {'straight': straight, 'turn': turn, 'inplace': inplace,
             "reverse": reverse, "change-lane": change_lane}
     x, y, t = np.array([]), np.array([]), np.array([])
     for manoeuvre, command in route:
-        px, py, pt = func[manoeuvre](command, curr_pose, v=v_straight if manoeuvre ==
-                                     "straight" or manoeuvre == "reverse" else v_turn, dt=dt)
+        px, py, pt = func[manoeuvre](command, curr_pose,
+                                     v=v_straight if manoeuvre ==
+                                     "straight" or manoeuvre == "reverse"
+                                     else v_turn, dt=dt)
         curr_pose = px[-1], py[-1], pt[-1]
         x = np.concatenate([x, px])
         y = np.concatenate([y, py])
@@ -78,7 +80,8 @@ def generate_trajectory(route, init_pose=(0, 0, np.pi/2), v_straight=v, v_turn=v
 
 def get_corners(x, y):
     corners = [[x[0], y[0]]]
-    for x1, x2, x3, y1, y2, y3 in zip(x[:-2], x[1:-1], x[2:], y[:-2], y[1:-1], y[2:]):
+    for x1, x2, x3, y1, y2, y3 \
+            in zip(x[:-2], x[1:-1], x[2:], y[:-2], y[1:-1], y[2:]):
         slope = (x2-x1)*(y3-y2) - (x3-x2)*(y2-y1)
         if np.abs(slope) > 0.0:
             corners.append([x2, y2])
@@ -128,8 +131,6 @@ def corners_to_route(corners, r=0.1):
 def euclidean(node1, node2):
     x1, y1 = node1
     x2, y2 = node2
-    # return 0
-    # return abs(x1-y1) + abs(x2-y2)
     return np.sqrt((x1-y1)**2 + (x2-y2)**2)
 
 
@@ -146,7 +147,8 @@ class Astar:
 
         self.predecessors = - \
             np.ones(
-                (self.occupancy_grid.shape[0], self.occupancy_grid.shape[1], 2))
+                (self.occupancy_grid.shape[0],
+                 self.occupancy_grid.shape[1], 2))
 
         self.distance = np.inf * np.ones_like(self.occupancy_grid)
 
@@ -164,8 +166,10 @@ class Astar:
             self.finalized[node[1], node[0]] = 1
 
             if node[1] < self.occupancy_grid.shape[0]-1:
-                if not self.finalized[node[1]+1, node[0]] and not self.occupancy_grid[node[1]+1, node[0]]:
-                    if self.distance[node[1]+1, node[0]] >= 1+self.distance[node[1], node[0]]:
+                if not self.finalized[node[1]+1, node[0]] \
+                        and not self.occupancy_grid[node[1]+1, node[0]]:
+                    if self.distance[node[1]+1, node[0]] \
+                            >= 1+self.distance[node[1], node[0]]:
                         self.predecessors[node[1]+1, node[0]] = node
 
                         heapq.heappush(heap, (self.distance[node[1], node[0]]+1 + euclidean(
@@ -200,10 +204,6 @@ class Astar:
                     self.distance[node[1], node[0]-1] = min(
                         self.distance[node[1], node[0]-1], 1+self.distance[node[1], node[0]])
 
-            # print(self.distance)
-
-        # self.distance[self.distance > 1000 ] = 1000
-
         path = []
 
         node = goal
@@ -236,35 +236,3 @@ class Astar:
             # plt.grid()
             plt.show()
         return path[:, 0], path[:, 1]
-
-# Fix a turn radius r
-# Shorten the straight segments by r
-# convert this into {("straight", s1), ("turn", +/- 90), ("straight", s2)}
-
-
-route = []
-pre_x, pre_y, theta = 0, 0, 90
-# corners.append([5,5])
-
-
-# route,init_pose = corners_to_route(corners,r=0.01)
-
-
-# use generate_trajectory() and plot the smooth path
-# print(route)
-# x, y, _ = generate_trajectory(route,init_pose,v_turn=0.1)
-# plt.figure()
-# plt.plot(x, y)
-# plt.axis("equal")
-# plt.grid()
-
-# import numpy as np
-# import networkx as nx
-# import matplotlib.pyplot as plt
-# from IPython.display import Image
-# from networkx.algorithms.shortest_paths.generic import *
-
-# def euclidean(node1, node2):
-#     x1,y1 = node1
-#     x2,y2 = node2
-#     return np.sqrt((x1-y1)**2 + (x2-y2)**2)
