@@ -7,6 +7,7 @@ import time
 
 from unicycle import simulate_unicycle
 from collision_check import circle_collision_check
+from lidar import Lidar
 
 dt = 0.1
 pred_horizon = 10
@@ -23,16 +24,19 @@ grid_res = 1
 class DWA:
     def __init__(self, grid_data, ref_path, start_pose, goal_threshold=0.3, grid_res=1) -> None:
         self.grid_data = grid_data
+        self.reality = grid_data.copy()
         self.ref_path = ref_path
         self.start_pose = start_pose
         self.goal_threshold = goal_threshold
-        self.grid_res = 1
+        self.grid_res = grid_res
         self.path_index = 0
         self.pose = start_pose
         self.v, self.w = 0.0, 0.0
         self.failed_attempts = -1
         self.logs = []
         self.path_index = 0
+        self.lidar = Lidar()
+        self.lidar.set_env(self.reality, self.grid_res)
 
     def _command_window(self, v, w, dt=0.1):
         """Returns acceptable v,w commands given current v,w"""
@@ -137,6 +141,12 @@ class DWA:
         # remember the function now returns a trajectory, not a single pose
         self.pose = simulate_unicycle(self.pose, self.v, self.w, N=1, dt=dt)[0]
 
+        self.lidar.set_env(self.reality, self.grid_res)
+        distances = self.lidar.sense_obstacles(self.pose)
+        # Add obstacles to grid data
+
+
+
         # update logs
         self.logs.append([*self.pose, self.v, self.w])
-        return np.array(self.logs)
+        return np.array(self.logs), distances
