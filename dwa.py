@@ -142,8 +142,13 @@ class DWA:
         self.pose = simulate_unicycle(self.pose, self.v, self.w, N=1, dt=dt)[0]
 
         self.lidar.set_env(self.reality, self.grid_res)
-        distances = self.lidar.sense_obstacles(self.pose)
+        distances, collision_points = self.lidar.sense_obstacles(self.pose)
         # Add obstacles to grid data
+        for point in collision_points:
+            if point[0] != -1:
+                i, j = point
+                self.grid_data[i, j] = 1
+                self.reality = self.grid_data.copy()
 
 
 

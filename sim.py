@@ -158,6 +158,7 @@ def pause_simulation():
 
 def update_plot(dwa_obj, ax):
     # canvas.update()
+    global simulation_status
     if simulation_status != SIMULATION_IN_PROGRESS:
         dwa_obj.reset()
         return
@@ -174,12 +175,10 @@ def update_plot(dwa_obj, ax):
         for dist, angle in zip(distances, dwa_obj.lidar.beam_angles):
             t = angle + theta
             plot(np.array([x, x+dist*np.cos(t)]), np.array([y, y+dist*np.sin(t)]), color="green", tag="lidar_beam")
-        # plt.legend()
-
-        # ax.clear()
         root.after(1, update_plot, dwa_obj, ax)
     except StopIteration:
-        pass
+        simulation_status = SIMULATION_IS_STOPPED
+        print("Simulation Completed!")
 
 
 button_frame=ttk.Frame(root)
