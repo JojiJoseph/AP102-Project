@@ -6,7 +6,7 @@ dt = 0.1
 num_st_pts = int(v/dt)
 num_pts = 50
 
-DEBUG = False
+DEBUG = True
 
 
 def cubic_spiral(theta_i, theta_f, n=10):

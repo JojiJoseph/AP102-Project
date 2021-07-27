@@ -135,7 +135,7 @@ class DWA:
             self.failed_attempts = -1
         # get next command
         self.v, self.w = self._track(local_ref_path, self.pose, self.v, self.w, dt,
-                               detect_collision=True, grid_data=self.grid_data)
+                                     detect_collision=True, grid_data=self.grid_data)
 
         # simulate vehicle for 1 step
         # remember the function now returns a trajectory, not a single pose
@@ -149,8 +149,6 @@ class DWA:
                 i, j = point
                 self.grid_data[i, j] = 1
                 self.reality = self.grid_data.copy()
-
-
 
         # update logs
         self.logs.append([*self.pose, self.v, self.w])

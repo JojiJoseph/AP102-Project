@@ -102,11 +102,16 @@ def simulate():
 
     astar_ = Astar(map_img)
 
+    global x_star, y_star
+
     x, y = astar_.shortest_path((0, 0), (19, 19))
+    plot(x, y, "astar")
 
     corners = get_corners(x, y)
     route, init_pose = corners_to_route(corners)
-    x_, y_, t = generate_trajectory(route, init_pose, v_turn=0.01, dt=0.1)
+    x_, y_, t = generate_trajectory(route, init_pose, v_turn=0.1, dt=0.1)
+    x_star = x_
+    y_star = y_
 
     ref_path = ref_path = np.hstack(
         [np.array(axis).reshape(-1, 1) for axis in (x_, y_, t)])
@@ -139,8 +144,8 @@ def plot(x, y, tag="lines", color="black"):
     n = len(x)
     assert len(x) == len(y)
     for i in range(1, n):
-        canvas.create_line(20+x[i-1]*scale_x, 20+y[i-1]*scale_y,
-                           20+x[i]*scale_x, 20+y[i]*scale_y, fill=color, width=2, tag=tag)
+        canvas.create_line(20+x[i-1]*scale_x + scale_x/2, 20+y[i-1]*scale_y + scale_y/2,
+                           20+x[i]*scale_x + scale_x/2, 20+y[i]*scale_y + scale_y/2, fill=color, width=2, tag=tag)
     canvas.update()
 
 
@@ -171,42 +176,44 @@ def update_plot(dwa_obj, ax):
         canvas.delete("lidar_beam")
         plot(progress[:, 0], progress[:, 1])
         scatter(progress[None, -1, 0], progress[None, -1, 1], tag="robot")
+        plot(x_star, y_star, "astar")
         x, y, theta = dwa_obj.pose
         for dist, angle in zip(distances, dwa_obj.lidar.beam_angles):
             t = angle + theta
-            plot(np.array([x, x+dist*np.cos(t)]), np.array([y, y+dist*np.sin(t)]), color="green", tag="lidar_beam")
+            plot(np.array([x, x+dist*np.cos(t)]), np.array([y,
+                 y+dist*np.sin(t)]), color="green", tag="lidar_beam")
         root.after(1, update_plot, dwa_obj, ax)
     except StopIteration:
         simulation_status = SIMULATION_IS_STOPPED
         print("Simulation Completed!")
 
 
-button_frame=ttk.Frame(root)
+button_frame = ttk.Frame(root)
 button_frame.pack()
-button_sim=ttk.Button(button_frame, text="Simulate", command=simulate)
+button_sim = ttk.Button(button_frame, text="Simulate", command=simulate)
 # button_pause = ttk.Button(button_frame, text="Pause", command=pause_simulation) TODO implement
-button_stop_sim=ttk.Button(
+button_stop_sim = ttk.Button(
     button_frame, text="Stop", command=stop_simulation)
 button_sim.pack(side=tk.LEFT)
 # button_pause.pack()
 button_stop_sim.pack(side=tk.LEFT)
 
-button_add_obstacle=ttk.Button(button_frame, text="Add Obstacle (TODO)")
+button_add_obstacle = ttk.Button(button_frame, text="Add Obstacle (TODO)")
 button_add_obstacle.pack(side=tk.LEFT)
 
-button_mark_start=ttk.Button(button_frame, text="Mark Start (TODO)")
+button_mark_start = ttk.Button(button_frame, text="Mark Start (TODO)")
 button_mark_start.pack(side=tk.LEFT)
 
-button_mark_end=ttk.Button(button_frame, text="Mark End (TODO)")
+button_mark_end = ttk.Button(button_frame, text="Mark End (TODO)")
 button_mark_end.pack(side=tk.LEFT)
 
-button_zoom_in=ttk.Button(button_frame, text="Zoom In (TODO)")
+button_zoom_in = ttk.Button(button_frame, text="Zoom In (TODO)")
 button_zoom_in.pack(side=tk.LEFT)
 
-button_zoom_fit=ttk.Button(button_frame, text="Fit on Screen (TODO)")
+button_zoom_fit = ttk.Button(button_frame, text="Fit on Screen (TODO)")
 button_zoom_fit.pack(side=tk.LEFT)
 
-button_zoom_out=ttk.Button(button_frame, text="Zoom Out (TODO)")
+button_zoom_out = ttk.Button(button_frame, text="Zoom Out (TODO)")
 button_zoom_out.pack(side=tk.LEFT)
 
 root.mainloop()
