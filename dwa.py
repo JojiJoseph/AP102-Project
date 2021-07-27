@@ -35,7 +35,7 @@ class DWA:
         self.failed_attempts = -1
         self.logs = []
         self.path_index = 0
-        self.lidar = Lidar()
+        self.lidar = Lidar(max_dist=3)
         self.lidar.set_env(self.reality, self.grid_res)
 
     def _command_window(self, v, w, dt=0.1):
