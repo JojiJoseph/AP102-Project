@@ -7,7 +7,7 @@ dt = 0.1
 num_st_pts = int(v/dt)
 num_pts = 50
 
-DEBUG = True
+DEBUG = False
 
 
 def cubic_spiral(theta_i, theta_f, n=10):
@@ -230,6 +230,72 @@ class Astar:
                                               + euclidean((node.x-1, node.y), goal), Node(node.x-1, node.y)))
                     self.distance[node.y, node.x-1] = min(
                         self.distance[node.y, node.x-1], 1+self.distance[node.y, node.x])
+            
+            if node.y < YMAX-1 and node.x < XMAX-1:
+                if not self.finalized[node.y+1, node.x+1] \
+                        and not self.occupancy_grid[node.y+1, node.x+1]:
+                    if self.distance[node.y+1, node.x+1] \
+                            > 1.414+self.distance[node.y, node.x]:
+                        self.predecessors[node.y+1, node.x+1] = node
+
+                        heapq.heappush(heap, (self.distance[node.y, node.x]+1.414
+                                              + euclidean((node.x+1, node.y+1), goal), Node(node.x+1, node.y+1)))
+                    self.distance[node.y+1, node.x+1] = min(
+                        self.distance[node.y+1, node.x+1], 1.414+self.distance[node.y, node.x])
+
+            if node.y > 0 and node.x < XMAX-1:
+                if not self.finalized[node.y-1, node.x+1] and not self.occupancy_grid[node.y-1, node.x+1]:
+                    if self.distance[node.y-1, node.x+1] > 1+self.distance[node.y, node.x]:
+                        self.predecessors[node.y-1, node.x+1] = node
+                        heapq.heappush(heap, (self.distance[node.y, node.x]+1.414
+                                              + euclidean((node.x+1, node.y-1), goal), Node(node.x+1, node.y-1)))
+                    self.distance[node.y-1, node.x+1] = min(
+                        self.distance[node.y-1, node.x+1], 1.414+self.distance[node.y, node.x])
+
+            if node.x > 0 and node.y > 0:
+                if not self.finalized[node.y-1, node.x-1] and not self.occupancy_grid[node.y-1, node.x-1]:
+                    if self.distance[node.y-1, node.x-1] > 1+self.distance[node.y, node.x]:
+                        self.predecessors[node.y-1, node.x-1] = node
+                        heapq.heappush(heap, (self.distance[node.y, node.x]+1.414
+                                              + euclidean((node.x-1, node.y-1), goal), Node(node.x-1, node.y-1)))
+                    self.distance[node.y-1, node.x-1] = min(
+                        self.distance[node.y-1, node.x-1], 1.414+self.distance[node.y, node.x])
+
+            if node.x > 0 and node.y < YMAX - 1:
+                if not self.finalized[node.y+1, node.x-1] and not self.occupancy_grid[node.y+1, node.x-1]:
+                    if self.distance[node.y+1, node.x-1] > 1+self.distance[node.y, node.x]:
+                        self.predecessors[node.y+1, node.x-1] = node
+                        heapq.heappush(heap, (self.distance[node.y, node.x]+1.414
+                                              + euclidean((node.x-1, node.y+1), goal), Node(node.x-1, node.y+1)))
+                    self.distance[node.y+1, node.x-1] = min(
+                        self.distance[node.y+1, node.x-1], 1.414+self.distance[node.y, node.x])
+
+            # if node.y > 0:
+            #     if not self.finalized[node.y-1, node.x] and not self.occupancy_grid[node.y-1, node.x]:
+            #         if self.distance[node.y-1, node.x] > 1+self.distance[node.y, node.x]:
+            #             self.predecessors[node.y-1, node.x] = node
+            #             heapq.heappush(heap, (self.distance[node.y, node.x]+1
+            #                                   + euclidean((node.x, node.y-1), goal), Node(node.x, node.y-1)))
+            #         self.distance[node.y-1, node.x] = min(
+            #             self.distance[node.y-1, node.x], 1+self.distance[node.y, node.x])
+
+            # if node.x < XMAX-1:
+            #     if not self.finalized[node.y, node.x+1] and not self.occupancy_grid[node.y, node.x+1]:
+            #         if self.distance[node.y, node.x+1] > 1+self.distance[node.y, node.x]:
+            #             self.predecessors[node.y, node.x+1] = node
+            #             heapq.heappush(heap, (self.distance[node.y, node.x]+1
+            #                                   + euclidean((node.x+1, node.y), goal), Node(node.x+1, node.y)))
+            #         self.distance[node.y, node.x+1] = min(
+            #             self.distance[node.y, node.x+1], 1+self.distance[node.y, node.x])
+
+            # if node.x > 0:
+            #     if not self.finalized[node.y, node.x-1] and not self.occupancy_grid[node.y, node.x-1]:
+            #         if self.distance[node.y, node.x-1] > 1+self.distance[node.y, node.x]:
+            #             self.predecessors[node.y, node.x-1] = node
+            #             heapq.heappush(heap, (self.distance[node.y, node.x]+1
+            #                                   + euclidean((node.x-1, node.y), goal), Node(node.x-1, node.y)))
+            #         self.distance[node.y, node.x-1] = min(
+            #             self.distance[node.y, node.x-1], 1+self.distance[node.y, node.x])
 
         path = []
 

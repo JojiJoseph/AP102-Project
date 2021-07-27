@@ -15,6 +15,7 @@ locals().update(config_params)
 # Load image
 img = cv2.imread("./circuit.png")
 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) / 255.
+# img = np.flip(img, 1)
 
 # plt.imshow(img, cmap="gray")
 # plt.show()
@@ -31,7 +32,7 @@ img_downsampled[img_downsampled > 0] = 1
 
 # Running A* algorithm
 astar_ = Astar(1-img_downsampled)
-path = astar_.shortest_path((3, 3), (30, 24))
+path = astar_.shortest_path( (32, 14), (24, 20))
 
 x, y = path
 interp_range = len(x)*2
@@ -39,9 +40,9 @@ x = np.interp(np.linspace(0, 1, interp_range), np.linspace(0, 1, len(x)), x)
 y = np.interp(np.linspace(0, 1, interp_range), np.linspace(0, 1, len(y)), y)
 
 # Calculate thetas
-pre_x, pre_y = 0, 0
-t = []
-for x_c, y_c in zip(x, y):
+pre_x, pre_y = x[0], y[0]
+t = [np.arctan2(y[1]-pre_y, x[1]-pre_x)]
+for x_c, y_c in zip(x[1:], y[1:]):
     t.append(np.arctan2(y_c-pre_y, x_c-pre_x))
     pre_x, pre_y = x_c, y_c
 t = np.array(t)
@@ -51,9 +52,6 @@ path = np.array([x, y, t], dtype=np.float).T
 
 # Create DWA object
 dwa_ = DWA(1-img_downsampled.T, path, path[0])
-
-# plt.imshow(1-dwa_.grid_data.T, cmap="Accent")
-# plt.show()
 
 plt.figure(figsize=(20, 20))
 plt.imshow(1-dwa_.grid_data.T, cmap="Dark2", interpolation=None)
@@ -86,8 +84,8 @@ for progress, distances, target_path in dwa_:
     plt.legend()
     plt.pause(0.001)
     i += 1
-    if i > 400:
-        break
+    # if i > 100:
+    #     break
 
 
 plt.legend()
