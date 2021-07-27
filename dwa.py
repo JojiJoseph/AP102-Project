@@ -22,9 +22,15 @@ grid_res = 1
 
 
 class DWA:
-    def __init__(self, grid_data, ref_path, start_pose, goal_threshold=0.3, grid_res=1) -> None:
+    def __init__(self, grid_data, ref_path, start_pose, goal_threshold=0.3, grid_res=1, reality=None) -> None:
         self.grid_data = grid_data
-        self.reality = grid_data.copy()
+        if reality is None:
+            self.reality = grid_data.copy()
+        else:
+            self.reality = reality
+            import matplotlib.pyplot as plt
+            plt.imshow(self.reality)
+            plt.show()
         self.ref_path = ref_path
         self.start_pose = start_pose
         self.goal_threshold = goal_threshold
@@ -88,7 +94,9 @@ class DWA:
             # how close is the last pose in local path from the ref path
 
             cte = np.linalg.norm(
-                ref_path[-1, 0:2]-local_path[-1, 0:2]) #/ len(local_path)
+                ref_path[:, 0:2]-local_path[:len(ref_path), 0:2], axis=-1)
+            cte = cte * np.linspace(0,1,len(ref_path))
+            cte = np.sum(cte)
             # print(cte)
 
             # other cost functions are possible
@@ -128,13 +136,14 @@ class DWA:
         # b = (local_ref_path[:, 1]-self.pose[1])
         # c = (np.hypot(a,b))
         # print(self.goal_threshold, np.min(c))
+        print(self.goal_threshold)
         if self.goal_threshold > np.min(np.hypot(local_ref_path[:, 0]-self.pose[0],
                                                  local_ref_path[:, 1]-self.pose[1])):
             candidate_jump = np.argmin(
                 np.hypot(local_ref_path[:, 0]-self.pose[0],
                          local_ref_path[:, 1]-self.pose[1]))
             self.path_index = self.path_index + 1 + \
-                1*candidate_jump#*(candidate_jump < jump_distance)
+                0*candidate_jump  # *(candidate_jump < jump_distance)
 
         self.failed_attempts += 1
         if self.failed_attempts > 1600:
@@ -142,7 +151,7 @@ class DWA:
             self.failed_attempts = -1
         # get next command
         (self.v, self.w), best_local_path = self._track(local_ref_path, self.pose, self.v, self.w, dt,
-                                     detect_collision=True, grid_data=self.grid_data)
+                                                        detect_collision=True, grid_data=self.grid_data)
 
         # simulate vehicle for 1 step
         # remember the function now returns a trajectory, not a single pose
@@ -155,7 +164,7 @@ class DWA:
             if point[0] != -1:
                 i, j = point
                 self.grid_data[i, j] = 1
-                self.reality = self.grid_data.copy()
+                # self.reality = self.grid_data.copy()
 
         # update logs
         self.logs.append([*self.pose, self.v, self.w, self.path_index])

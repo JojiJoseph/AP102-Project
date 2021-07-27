@@ -27,7 +27,7 @@ class Lidar(object):
             direction = np.array([np.cos(theta+b), np.sin(theta+b)])
             for d in self.line_sampler:
                 beam_x, beam_y = np.array([xc, yc]) + d * direction
-                i, j = int(beam_x/self.grid_res), int(beam_y/self.grid_res)
+                i, j = round(beam_x/self.grid_res), round(beam_y/self.grid_res)
                 try:
                     if self.grid[i][j] == 1:
                         collision_points[idx] = i, j
