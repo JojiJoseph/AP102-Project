@@ -15,9 +15,6 @@ class Lidar(object):
         #2-D occupancy grid and grid_resolution
         self.grid = grid
         self.grid_res = grid_res
-        # import matplotlib.pyplot as plt
-        # plt.imshow(self.grid.T)
-        # plt.show()
     
     def sense_obstacles(self, pose):
         xc, yc, theta = pose
@@ -32,7 +29,7 @@ class Lidar(object):
                     if self.grid[i][j] == 1:
                         collision_points[idx] = i, j
                         break
-                except:
-                    pass # TODO: Write meaningful code here
+                except IndexError:
+                    print("Ignoring index error in lidar sense obstacles.")
             beam_data[idx] = d
         return beam_data, collision_points
