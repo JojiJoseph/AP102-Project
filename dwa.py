@@ -78,7 +78,7 @@ class DWA:
                 hit, distance = circle_collision_check(
                     grid_data, local_path, grid_res=grid_res)
                 if hit:
-                    # print("local path has a collision")
+                    print("local path has a collision")
                     continue
             else:
                 distance = np.inf
@@ -92,7 +92,7 @@ class DWA:
 
             # other cost functions are possible
             # can modify collision checker to give distance to closest obstacle
-            cost = w_cte*cte + w_speed*np.abs(V_MAX - v) + w_obs / distance
+            cost = w_cte*cte + w_speed*np.abs(V_MAX - v)**2 + w_obs / distance
 
             # check if there is a better candidate
             if cost < best_cost:
@@ -119,18 +119,23 @@ class DWA:
 
         if self.path_index > len(self.ref_path)-1:
             raise StopIteration
-
         local_ref_path = self.ref_path[self.path_index:self.path_index+pred_horizon]
+        # print(self.ref_path.shape, local_ref_path.shape)
+        # print(self.pose[1])
+        # a = (local_ref_path[:, 0]-self.pose[0])
+        # b = (local_ref_path[:, 1]-self.pose[1])
+        # c = (np.hypot(a,b))
+        # print(self.goal_threshold, np.min(c))
         if self.goal_threshold > np.min(np.hypot(local_ref_path[:, 0]-self.pose[0],
                                                  local_ref_path[:, 1]-self.pose[1])):
             candidate_jump = np.argmin(
                 np.hypot(local_ref_path[:, 0]-self.pose[0],
                          local_ref_path[:, 1]-self.pose[1]))
             self.path_index = self.path_index + 1 + \
-                candidate_jump*(candidate_jump < jump_distance)
+                1*candidate_jump#*(candidate_jump < jump_distance)
 
         self.failed_attempts += 1
-        if self.failed_attempts > 160:
+        if self.failed_attempts > 1600:
             self.path_index += 1
             self.failed_attempts = -1
         # get next command
@@ -152,4 +157,5 @@ class DWA:
 
         # update logs
         self.logs.append([*self.pose, self.v, self.w])
+        print(self.path_index)
         return np.array(self.logs), distances
