@@ -10,7 +10,7 @@ from collision_check import circle_collision_check
 from lidar import Lidar
 
 dt = 0.1
-pred_horizon = 10
+# pred_horizon = 10
 
 config_params = toml.load("config.toml")['params']
 print(config_params)
@@ -87,7 +87,7 @@ class DWA:
             # how close is the last pose in local path from the ref path
 
             cte = np.linalg.norm(
-                ref_path[-1, 0:2]-local_path[-1, 0:2]) / len(local_path)
+                ref_path[-1, 0:2]-local_path[-1, 0:2]) #/ len(local_path)
             # print(cte)
 
             # other cost functions are possible
@@ -114,8 +114,8 @@ class DWA:
         return self
 
     def __next__(self):
-        jump_distance = 4
-        pred_horizon = 10
+        # pred_horizon = 20
+        print(pred_horizon)
 
         if self.path_index > len(self.ref_path)-1:
             raise StopIteration
@@ -156,6 +156,6 @@ class DWA:
                 self.reality = self.grid_data.copy()
 
         # update logs
-        self.logs.append([*self.pose, self.v, self.w])
+        self.logs.append([*self.pose, self.v, self.w, self.path_index])
         print(self.path_index)
         return np.array(self.logs), distances

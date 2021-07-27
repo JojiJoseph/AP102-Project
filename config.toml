@@ -3,6 +3,7 @@
 "map 2" = "map2.png"
 "map 3" = "map3.png"
 "map 4" = "map4.png"
+"circuit" = "circuit.png"
 
 [params]
 dt = 0.1 # 1 / planner update frequency
@@ -14,7 +15,7 @@ ACC_MAX = 0.5 # Maximum linear acceleration (m/s^2)
 W_DOT_MAX = 3.0 # Maximum angular acceleration (rad/s^2)
 LATERAL_ACC_MAX = 1.5 # Maximum lateral acceleration (m/s^2)
 goal_threshold = 0.3
-pred_horizon=10
-w_cte = 10
-w_obs = 0.10
-w_speed = 1.0
+pred_horizon=20
+w_cte = 1
+w_obs = 2
+w_speed = 1
