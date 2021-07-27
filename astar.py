@@ -1,5 +1,6 @@
 import numpy as np
 import heapq
+from collections import namedtuple
 
 v = 1
 dt = 0.1
@@ -131,86 +132,111 @@ def corners_to_route(corners, r=0.1):
 def euclidean(node1, node2):
     x1, y1 = node1
     x2, y2 = node2
-    return np.sqrt((x1-y1)**2 + (x2-y2)**2)
+    # return 0
+    return np.sqrt((x1-x2)**2 + (y1-y2)**2)
+
+
+Node = namedtuple("Node", ["x", "y"])
 
 
 class Astar:
     def __init__(self, occupancy_grid):
+        """Creates a wrapper over an occupancy grid on which astar algorithm is applied.
+
+        Args:
+            occupancy_grid (2d numpy array): A 2d grid with 1 indicates object, 0 indicates free space.
+        """
         self.occupancy_grid = occupancy_grid
 
     def shortest_path(self, start, goal, norm=euclidean):
-        self.predecessors = []
-        self.predecessors.append(start)
+
+        # Convert start and goal to namedtuples for better readability
+        start = Node(*start)
+        goal = Node(*goal)
+
+        # Following heap is used to get the next node to process in constant time.
         heap = []
 
         self.finalized = np.zeros_like(self.occupancy_grid)
 
-        self.predecessors = - \
-            np.ones(
-                (self.occupancy_grid.shape[0],
-                 self.occupancy_grid.shape[1], 2))
+        # predecessors is a 3d tensor, that can be viewed as a 2d lookup table where the entry is the index of( in (y, x) form) previous node
+        # in the shortest path from starting node to current node.
+        self.predecessors = -np.ones(
+            (self.occupancy_grid.shape[0],
+             self.occupancy_grid.shape[1], 2))
 
+        # Each entry corresponds to the best distance so far from the shortest node to current node
+        # Initialized to infinity
         self.distance = np.inf * np.ones_like(self.occupancy_grid)
 
         heapq.heappush(heap, (0+norm(start, goal), start))
-        self.distance[start[1], start[0]] = 0
+        self.distance[start.y, start.x] = 0
 
         while len(heap):
-            node = heapq.heappop(heap)[1]
-            if self.finalized[node[1], node[0]] == 1:
+            # Heap pop will return (distance, node).
+            # But we need only the distance
+            _, node = heapq.heappop(heap)
+
+            # If the shortest distance to current node is finalized,
+            # we need not process that node
+            if self.finalized[node.y, node.x] == 1:
                 continue
 
-            if node[0] == goal[0] and node[1] == goal[1]:
+            # We can stop the algorithm ones we reach the goal
+            if node == goal:
                 break
 
-            self.finalized[node[1], node[0]] = 1
+            # Set current node as finalized
+            self.finalized[node.y, node.x] = 1
 
-            if node[1] < self.occupancy_grid.shape[0]-1:
-                if not self.finalized[node[1]+1, node[0]] \
-                        and not self.occupancy_grid[node[1]+1, node[0]]:
-                    if self.distance[node[1]+1, node[0]] \
-                            >= 1+self.distance[node[1], node[0]]:
-                        self.predecessors[node[1]+1, node[0]] = node
+            YMAX = self.occupancy_grid.shape[0]
+            XMAX = self.occupancy_grid.shape[1]
 
-                        heapq.heappush(heap, (self.distance[node[1], node[0]]+1 + euclidean(
-                            (node[0], node[1]+1), goal), (node[0], node[1]+1)))
-                    self.distance[node[1]+1, node[0]] = min(
-                        self.distance[node[1]+1, node[0]], 1+self.distance[node[1], node[0]])
+            if node.y < YMAX-1:
+                if not self.finalized[node.y+1, node.x] \
+                        and not self.occupancy_grid[node.y+1, node.x]:
+                    if self.distance[node.y+1, node.x] \
+                            > 1+self.distance[node.y, node.x]:
+                        self.predecessors[node.y+1, node.x] = node
 
-            if node[1] > 0:
-                if not self.finalized[node[1]-1, node[0]] and not self.occupancy_grid[node[1]-1, node[0]]:
-                    if self.distance[node[1]-1, node[0]] >= 1+self.distance[node[1], node[0]]:
-                        self.predecessors[node[1]-1, node[0]] = node
-                        heapq.heappush(heap, (self.distance[node[1], node[0]]+1 + euclidean(
-                            (node[0], node[1]-1), goal), (node[0], node[1]-1)))
-                    self.distance[node[1]-1, node[0]] = min(
-                        self.distance[node[1]-1, node[0]], 1+self.distance[node[1], node[0]])
+                        heapq.heappush(heap, (self.distance[node.y, node.x]+1
+                                              + euclidean((node.x, node.y+1), goal), Node(node.x, node.y+1)))
+                    self.distance[node.y+1, node.x] = min(
+                        self.distance[node.y+1, node.x], 1+self.distance[node.y, node.x])
 
-            if node[0] < self.occupancy_grid.shape[1]-1:
-                if not self.finalized[node[1], node[0]+1] and not self.occupancy_grid[node[1], node[0]+1]:
-                    if self.distance[node[1], node[0]+1] >= 1+self.distance[node[1], node[0]]:
-                        self.predecessors[node[1], node[0]+1] = node
-                        heapq.heappush(heap, (self.distance[node[1], node[0]]+1 + euclidean(
-                            (node[0]+1, node[1]), goal), (node[0]+1, node[1])))
-                    self.distance[node[1], node[0]+1] = min(
-                        self.distance[node[1], node[0]+1], 1+self.distance[node[1], node[0]])
+            if node.y > 0:
+                if not self.finalized[node.y-1, node.x] and not self.occupancy_grid[node.y-1, node.x]:
+                    if self.distance[node.y-1, node.x] > 1+self.distance[node.y, node.x]:
+                        self.predecessors[node.y-1, node.x] = node
+                        heapq.heappush(heap, (self.distance[node.y, node.x]+1
+                                              + euclidean((node.x, node.y-1), goal), Node(node.x, node.y-1)))
+                    self.distance[node.y-1, node.x] = min(
+                        self.distance[node.y-1, node.x], 1+self.distance[node.y, node.x])
 
-            if node[0] > 0:
-                if not self.finalized[node[1], node[0]-1] and not self.occupancy_grid[node[1], node[0]-1]:
-                    if self.distance[node[1], node[0]-1] >= 1+self.distance[node[1], node[0]]:
-                        self.predecessors[node[1], node[0]-1] = node
-                        heapq.heappush(heap, (self.distance[node[1], node[0]]+1 + euclidean(
-                            (node[0]-1, node[1]), goal), (node[0]-1, node[1])))
-                    self.distance[node[1], node[0]-1] = min(
-                        self.distance[node[1], node[0]-1], 1+self.distance[node[1], node[0]])
+            if node.x < XMAX-1:
+                if not self.finalized[node.y, node.x+1] and not self.occupancy_grid[node.y, node.x+1]:
+                    if self.distance[node.y, node.x+1] > 1+self.distance[node.y, node.x]:
+                        self.predecessors[node.y, node.x+1] = node
+                        heapq.heappush(heap, (self.distance[node.y, node.x]+1
+                                              + euclidean((node.x+1, node.y), goal), Node(node.x+1, node.y)))
+                    self.distance[node.y, node.x+1] = min(
+                        self.distance[node.y, node.x+1], 1+self.distance[node.y, node.x])
+
+            if node.x > 0:
+                if not self.finalized[node.y, node.x-1] and not self.occupancy_grid[node.y, node.x-1]:
+                    if self.distance[node.y, node.x-1] > 1+self.distance[node.y, node.x]:
+                        self.predecessors[node.y, node.x-1] = node
+                        heapq.heappush(heap, (self.distance[node.y, node.x]+1
+                                              + euclidean((node.x-1, node.y), goal), Node(node.x-1, node.y)))
+                    self.distance[node.y, node.x-1] = min(
+                        self.distance[node.y, node.x-1], 1+self.distance[node.y, node.x])
 
         path = []
 
         node = goal
-        while node[0] != -1:
-
+        while node.x != -1:
             path.append(node)
-            node = self.predecessors[int(node[1]), int(node[0])]
+            node = Node(*self.predecessors[int(node.y), int(node.x)])
 
         path.reverse()
 
@@ -221,17 +247,18 @@ class Astar:
             plt.imshow(self.distance, origin="lower")
             plt.figure()
             plt.imshow(self.occupancy_grid, origin="lower")
-            plt.scatter(x, y)
+            # plt.scatter(x, y)
 
-            corners = get_corners(x.tolist(), y.tolist())
-            route, init_pose = corners_to_route(corners)
-            print(route)
+            # corners = get_corners(x.tolist(), y.tolist())
+            # route, init_pose = corners_to_route(corners)
+            # print(route)
             # plt.show()
-            print(self.distance)
+            # print(self.distance)
 
-            x, y, _ = generate_trajectory(route, init_pose, v_turn=0.1)
+            # x, y, _ = generate_trajectory(route, init_pose, v_turn=0.1)
             # plt.figure()
             plt.plot(x, y)
+            print(x, y)
             plt.axis("equal")
             # plt.grid()
             plt.show()
