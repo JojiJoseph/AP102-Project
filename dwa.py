@@ -69,6 +69,7 @@ class DWA:
         commands = self._command_window(v, w, dt)
         # initialize path cost
         best_cost, best_command = np.inf, None
+        best_local_path = None
         for i, (v, w) in enumerate(commands):
             # Number of steps = prediction horizon
             local_path = simulate_unicycle(pose, v, w, pred_horizon, dt)
@@ -97,11 +98,12 @@ class DWA:
             # check if there is a better candidate
             if cost < best_cost:
                 best_cost, best_command = cost, [v, w]
+                best_local_path = local_path
 
         if best_command:
-            return best_command
+            return best_command, best_local_path
         else:
-            return [0, 0]
+            return [0, 0], best_local_path
 
     def __iter__(self):
         self.path_index = 0
@@ -139,7 +141,7 @@ class DWA:
             self.path_index += 1
             self.failed_attempts = -1
         # get next command
-        self.v, self.w = self._track(local_ref_path, self.pose, self.v, self.w, dt,
+        (self.v, self.w), best_local_path = self._track(local_ref_path, self.pose, self.v, self.w, dt,
                                      detect_collision=True, grid_data=self.grid_data)
 
         # simulate vehicle for 1 step
@@ -158,4 +160,4 @@ class DWA:
         # update logs
         self.logs.append([*self.pose, self.v, self.w, self.path_index])
         print(self.path_index)
-        return np.array(self.logs), distances
+        return np.array(self.logs), distances, best_local_path

@@ -54,13 +54,13 @@ dwa_obj = DWA(1-img2.T, path, path[0])
 plt.imshow(1-dwa_obj.grid_data.T, cmap="Accent")
 plt.show()
 
-plt.figure(figsize=(20,20))
+plt.figure(figsize=(20, 20))
 plt.imshow(1-dwa_obj.grid_data.T, cmap="gray", interpolation=None)
 plt.scatter(x, y)
 plt.legend()
 
 i = 0
-for progress, distances in dwa_obj:
+for progress, distances, target_path in dwa_obj:
 
     tracked_x, tracked_y = progress[:, 0], progress[:, 1]
     plt.clf()
@@ -72,13 +72,16 @@ for progress, distances in dwa_obj:
     # print(idx, type(idx))
     x_target = x[idx: idx+pred_horizon]
     y_target = y[idx: idx+pred_horizon]
+    if target_path is not None:
+        plt.plot(target_path[:,0],target_path[:,1], label="Target path")
+    # print(target_path.shape)
     plt.scatter(x_target, y_target, label="Prediction Horizon")
     # plt.scatter(tracked_x[-1], tracked_y[-1], label="Robot")
     plt.legend()
     plt.pause(0.001)
     i += 1
-    # if i > 400:
-    #     break
+    if i > 400:
+        break
 
 
 print(np.unique(dwa_obj.grid_data.T))
