@@ -1,4 +1,5 @@
 import time
+from types import SimpleNamespace
 
 import cv2
 import matplotlib.pyplot as plt
@@ -9,60 +10,63 @@ from astar import Astar
 from dwa import DWA
 
 config_params = toml.load("config.toml")['params']
-print(config_params)
-locals().update(config_params)
+params = SimpleNamespace(**config_params)
 
-# Load image
-img = cv2.imread("./circuit3.png")
-img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) / 255.
-img = np.flip(img, 0)
 
-img_reality = cv2.imread("./circuit3_dynamic_obstacles.png")
-img_reality = cv2.cvtColor(img_reality, cv2.COLOR_BGR2GRAY) / 255.
-img_reality = np.flip(img_reality, 0)
+def preprocess(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) / 255.
+    img = np.flip(img, 0)
+    return img
 
-# plt.imshow(img, cmap="gray")
-# plt.show()
+
+def downsample(img, grid_res=0.05):
+    new_shape = (
+        round(img.shape[1]*grid_res), round(img.shape[0]*grid_res))
+    img_downsampled = cv2.resize(
+        img, new_shape, cv2.INTER_NEAREST)
+    return img_downsampled
+
+
+img = cv2.imread("./circuits/circuit3.png")
+img = preprocess(img)
+
+img_reality = cv2.imread("./circuits/circuit3_dynamic.png")
+img_reality = preprocess(img_reality)
 
 grid_res = 0.05
-downsampled_image_shape = (
-    round(img.shape[1]*grid_res), round(img.shape[0]*grid_res))
-img_downsampled = cv2.resize(
-    img, downsampled_image_shape, cv2.INTER_NEAREST)
+img_downsampled = downsample(img, grid_res)
 
 # Making it binary
 img_downsampled[img_downsampled > 0.3] = 1
 img_downsampled[img_downsampled < 0.99] = 0
 
-reality_downsampled = cv2.resize(
-    img_reality, downsampled_image_shape, cv2.INTER_NEAREST)
+reality_downsampled = downsample(img_reality, grid_res)
 
 # Making it binary
 reality_downsampled[reality_downsampled > 0.3] = 1
 reality_downsampled[reality_downsampled < 0.99] = 0
 
-print("Downsampled image shape", img_downsampled.shape)
-plt.imshow(img_downsampled, origin="lower")
+plt.imshow(img_downsampled, origin="lower", cmap="gray")
 plt.title("Track")
 plt.show()
 
 # Running A* algorithm
 astar_ = Astar(1-img_downsampled)
 # circuit 1
-start = (5, 3)
-goal = (25, 20)
+# start = (5, 3)
+# goal = (25, 20)
 # start = (100,65)
 # goal = (542, 370)
 
 # circuit 2
-start = (5, 10)
-goal = (15, 11)
+# start = (5, 10)
+# goal = (14, 12)
 
 # circuit 3
 start = (5, 5)
 goal = (3, 15)
 
-path = astar_.shortest_path( start, goal)
+path = astar_.shortest_path(start, goal)
 
 x, y = path
 interp_range = len(x)*2
@@ -81,14 +85,16 @@ t = np.array(t)
 path = np.array([x, y, t], dtype=np.float).T
 
 # Create DWA object
-dwa_ = DWA(1-img_downsampled.T, path, path[0], goal_threshold=goal_threshold, reality=1-reality_downsampled.T)
+dwa_ = DWA(1-img_downsampled.T, path,
+           path[0], goal_threshold=params.goal_threshold, reality=1-reality_downsampled.T)
 
 plt.figure(figsize=(20, 20))
 plt.imshow(1-dwa_.grid_data.T, cmap="Dark2", interpolation=None)
 plt.scatter(x, y)
 plt.legend()
 
-i = 0
+# Simulation loop
+step = 0
 for progress, distances, target_path in dwa_:
 
     tracked_x, tracked_y = progress[:, 0], progress[:, 1]
@@ -98,10 +104,10 @@ for progress, distances, target_path in dwa_:
     plt.scatter(x, y, label="A* path")
     plt.plot(tracked_x, tracked_y, c="red", label="tracked")
     plt.scatter(tracked_x[-1], tracked_y[-1], label="Robot")
-    idx = int(progress[-1, 5])
+    idx_target = int(progress[-1, 5])
 
-    x_target = x[idx: idx+pred_horizon]
-    y_target = y[idx: idx+pred_horizon]
+    x_target = x[idx_target: idx_target+params.pred_horizon]
+    y_target = y[idx_target: idx_target+params.pred_horizon]
 
     plt.scatter(x_target, y_target, label="Prediction Horizon")
     x_c, y_c, theta_c = dwa_.pose
@@ -114,8 +120,10 @@ for progress, distances, target_path in dwa_:
 
     plt.legend()
     plt.pause(0.001)
-    i += 1
-    # if i > 600:
+    step += 1
+
+    # Uncomment following lines if the simulation goes to an infinite loop
+    # if step > 600:
     #     break
 
 print("Simulation Ended!")

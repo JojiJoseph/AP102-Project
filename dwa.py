@@ -28,9 +28,6 @@ class DWA:
             self.reality = grid_data.copy()
         else:
             self.reality = reality
-            import matplotlib.pyplot as plt
-            plt.imshow(self.reality)
-            plt.show()
         self.ref_path = ref_path
         self.start_pose = start_pose
         self.goal_threshold = goal_threshold
