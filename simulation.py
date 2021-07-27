@@ -1,5 +1,7 @@
 import time
 from types import SimpleNamespace
+import argparse
+
 
 import cv2
 import matplotlib.pyplot as plt
@@ -9,7 +11,11 @@ import toml
 from astar import Astar
 from dwa import DWA
 
-config_params = toml.load("config.toml")['params']
+parser = argparse.ArgumentParser()
+parser.add_argument("--map", default="circuit")
+
+config = toml.load("config.toml")
+config_params = config['params']
 params = SimpleNamespace(**config_params)
 
 
@@ -26,11 +32,15 @@ def downsample(img, grid_res=0.05):
         img, new_shape, cv2.INTER_NEAREST)
     return img_downsampled
 
+args = parser.parse_args()
+circuit_name = args.map
 
-img = cv2.imread("./circuits/circuit3.png")
+circuit, circuit_dynamic = config["maps"][circuit_name]
+
+img = cv2.imread(f"./circuits/{circuit}")
 img = preprocess(img)
 
-img_reality = cv2.imread("./circuits/circuit3_dynamic.png")
+img_reality = cv2.imread(f"./circuits/{circuit_dynamic}")
 img_reality = preprocess(img_reality)
 
 grid_res = 0.05
@@ -52,20 +62,8 @@ plt.show()
 
 # Running A* algorithm
 astar_ = Astar(1-img_downsampled)
-# circuit 1
-# start = (5, 3)
-# goal = (25, 20)
-# start = (100,65)
-# goal = (542, 370)
-
-# circuit 2
-# start = (5, 10)
-# goal = (14, 12)
-
-# circuit 3
-start = (5, 5)
-goal = (3, 15)
-
+start = config[circuit_name]["start"]
+goal = config[circuit_name]["goal"]
 path = astar_.shortest_path(start, goal)
 
 x, y = path

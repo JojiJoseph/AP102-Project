@@ -1,7 +1,7 @@
 [maps]
-"Circuit" = "circuit.png"
-"Circuit 2" = "circuit2.png"
-"Circuit 3" = "circuit3.png"
+"circuit" = ["circuit.png", "circuit_dynamic.png"]
+"circuit 2" = ["circuit2.png", "circuit2_dynamic.png"]
+"circuit 3" = ["circuit3.png", "circuit3_dynamic.png"]
 
 [params]
 dt = 0.1 # 1 / planner update frequency
@@ -17,3 +17,15 @@ pred_horizon=30
 w_cte = 1
 w_obs = 2
 w_speed = 5
+
+[circuit]
+start = [5, 3]
+goal = [25, 20]
+
+["circuit 2"]
+start = [5, 10]
+goal = [14, 12]
+
+["circuit 3"]
+start = [5, 5]
+goal = [3, 15]

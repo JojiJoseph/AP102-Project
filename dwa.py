@@ -122,7 +122,7 @@ class DWA:
 
     def __next__(self):
         # pred_horizon = 20
-        print(pred_horizon)
+        # print(pred_horizon)
 
         if self.path_index > len(self.ref_path)-1:
             raise StopIteration
