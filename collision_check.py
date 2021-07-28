@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-# choose resolution and dimensions
 
 w = 0.8
 l = 1.2
@@ -24,7 +23,6 @@ def circle_collision_check(grid, local_traj, grid_res=1):
 
     occupied_pt = grid[X, Y] == 1
 
-    min_distance_2 = np.inf
     x, y, t = local_traj[:, 0], local_traj[:, 1], local_traj[:, 2]
     rot = np.array([[np.sin(t), -np.cos(t)], [np.cos(t), np.sin(t)]])
     rot = rot.transpose(2, 0, 1)
