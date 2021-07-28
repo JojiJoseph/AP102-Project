@@ -2,7 +2,7 @@ import numpy as np
 import heapq
 from collections import namedtuple
 
-DEBUG = True
+DEBUG = False
 SQRT2 = np.sqrt(2)
 
 def _euclidean(node1, node2):

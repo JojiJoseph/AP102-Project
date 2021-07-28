@@ -37,20 +37,19 @@ circuit_name = args.map
 
 circuit, circuit_dynamic = config["maps"][circuit_name]
 
-img = cv2.imread(f"./circuits/{circuit}")
+img = cv2.imread(f"./maps/{circuit}")
 img = preprocess(img)
 
-img_reality = cv2.imread(f"./circuits/{circuit_dynamic}")
+img_reality = cv2.imread(f"./maps/{circuit_dynamic}")
 img_reality = preprocess(img_reality)
 
-grid_res = 0.05
-img_downsampled = downsample(img, grid_res)
+img_downsampled = downsample(img, grid_res=0.05)
 
 # Making it binary
 img_downsampled[img_downsampled > 0.3] = 1
 img_downsampled[img_downsampled < 0.99] = 0
 
-reality_downsampled = downsample(img_reality, grid_res)
+reality_downsampled = downsample(img_reality, grid_res=0.05)
 
 # Making it binary
 reality_downsampled[reality_downsampled > 0.3] = 1
@@ -71,7 +70,7 @@ interp_range = len(x)*2
 x = np.interp(np.linspace(0, 1, interp_range), np.linspace(0, 1, len(x)), x)
 y = np.interp(np.linspace(0, 1, interp_range), np.linspace(0, 1, len(y)), y)
 
-# Calculate thetas
+# Calculate orientation
 pre_x, pre_y = x[0], y[0]
 t = [np.arctan2(y[1]-pre_y, x[1]-pre_x)]
 for x_c, y_c in zip(x[1:], y[1:]):
