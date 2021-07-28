@@ -12,7 +12,7 @@ from astar import Astar
 from dwa import DWA
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--map", default="circuit")
+parser.add_argument("-m", "--map", default="circuit", help="The name of the map. See config.toml for available maps.")
 
 config = toml.load("config.toml")
 config_params = config['params']
@@ -121,6 +121,6 @@ for progress, distances, target_path in dwa_:
     # if step > 600:
     #     break
 
-print("Simulation Ended!")
+print("Simulation Finished!")
 plt.legend()
 plt.show()

@@ -20,12 +20,16 @@ grid_res = 1
 
 
 class DWA:
+    """Implementation of DWA
+
+    After initializing with grid_data, this class can be used as an iterator to get the simulation progress.
+    """
     def __init__(self, grid_data, ref_path, start_pose, goal_threshold=0.3, grid_res=1, reality=None) -> None:
         self.grid_data = grid_data
         if reality is None:
             self.reality = grid_data.copy()
         else:
-            self.reality = reality
+            self.reality = reality # Dynamic data
         self.ref_path = ref_path
         self.start_pose = start_pose
         self.goal_threshold = goal_threshold
