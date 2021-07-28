@@ -12,7 +12,7 @@ from astar import Astar
 from dwa import DWA
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--map", default="circuit")
+parser.add_argument("-m", "--map", default="circuit", help="The name of the map. See config.toml for available maps.")
 
 config = toml.load("config.toml")
 config_params = config['params']
@@ -87,9 +87,6 @@ dwa_ = DWA(1-img_downsampled.T, path,
            path[0], goal_threshold=params.goal_threshold, reality=1-reality_downsampled.T)
 
 plt.figure(figsize=(20, 20))
-plt.imshow(1-dwa_.grid_data.T, cmap="Dark2", interpolation=None)
-plt.scatter(x, y)
-plt.legend()
 
 # Simulation loop
 step = 0
@@ -100,8 +97,7 @@ for progress, distances, target_path in dwa_:
     plt.imshow(1-dwa_.grid_data.T, cmap="gray", origin="lower")
     plt.imshow(1-dwa_.reality.T, cmap="gray", origin="lower", alpha=0.5)
     plt.scatter(x, y, label="A* path")
-    plt.plot(tracked_x, tracked_y, c="red", label="tracked")
-    plt.scatter(tracked_x[-1], tracked_y[-1], label="Robot")
+    plt.plot(tracked_x, tracked_y, c="red", label="Tracked")
     idx_target = int(progress[-1, 5])
 
     x_target = x[idx_target: idx_target+params.pred_horizon]
@@ -114,8 +110,9 @@ for progress, distances, target_path in dwa_:
         plt.plot(np.array([x_c, x_c+dist*np.cos(t)]),
                  np.array([y_c, y_c+dist*np.sin(t)]), c="green")
     if target_path is not None:
-        plt.plot(target_path[:, 0], target_path[:, 1], label="Target path")
+        plt.plot(target_path[:, 0], target_path[:, 1], label="Target path", linewidth=2, c="blue")
 
+    plt.scatter(tracked_x[-1], tracked_y[-1], label="Robot", s=100, c="red", zorder=10)
     plt.legend()
     plt.pause(0.001)
     step += 1
@@ -124,6 +121,6 @@ for progress, distances, target_path in dwa_:
     # if step > 600:
     #     break
 
-print("Simulation Ended!")
+print("Simulation Finished!")
 plt.legend()
 plt.show()

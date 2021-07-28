@@ -1,30 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 # choose resolution and dimensions
-grid_res = 1
-grid_span = 15  # square circuit dimensions in m
-
-# calculate grid_shape from grid
-# dimensions have to be integers
-grid_shape = (np.array([grid_span]*2)/grid_res).astype('int')
-# Initialize
-grid_data = np.zeros(grid_shape)
-
-# Create rectangular obstacles in world co-ordinates
-#xmin, xmax, ymin, ymax
-obstacles = np.array([[5, 6, 7, 9]])  # [[25, 26, 10, 40],
-# [2, 8, 16, 20]])
-for obs in obstacles:
-    # calculate obstacles extent in pixel coords
-    xmin, xmax, ymin, ymax = (obs/grid_res).astype('int')
-    # mark them as occupied
-    grid_data[xmin:xmax, ymin:ymax] = 1.0
-
-# calculate the extents
-x1, y1 = 0, 0
-x2, y2 = grid_span, grid_span
-
-
 
 w = 0.8
 l = 1.2
@@ -40,13 +16,12 @@ l = 0.4
 circles = [(0, 0, r), (0, l, r), (0, -l, r)]
 
 
-def circle_collision_check(grid, local_traj, grid_res=grid_res):
+def circle_collision_check(grid, local_traj, grid_res=1):
     xmax, ymax = grid.shape
     all_x = np.arange(xmax)
     all_y = np.arange(ymax)
     X, Y = np.meshgrid(all_x, all_y)
 
-    # print("In circle collision check")
     occupied_pt = grid[X, Y] == 1
 
     min_distance_2 = np.inf
