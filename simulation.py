@@ -55,10 +55,6 @@ reality_downsampled = downsample(img_reality, grid_res=0.05)
 reality_downsampled[reality_downsampled > 0.3] = 1
 reality_downsampled[reality_downsampled < 0.99] = 0
 
-plt.imshow(img_downsampled, origin="lower", cmap="gray")
-plt.title("Track")
-plt.show()
-
 # Running A* algorithm
 astar_ = Astar(1-img_downsampled)
 start = config[circuit_name]["start"]
